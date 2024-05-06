@@ -3,3 +3,5 @@
 ## An Idea by my friend RedWire that I decided to learn how to mod Balatro in order to make.
 
 Long story short, Balatro is a huge pain in the ass to mod.
+
+This is a mod for Balamod, and as such it will NOT work with Steamodded
