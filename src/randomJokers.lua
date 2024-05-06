@@ -1,10 +1,15 @@
+--start of mod
+
+--variable definitions
 local patched = false
 local roundsPlayed = 0
 
+--reset rounds counter to make sure the first played blind never rolls jokers
 resetRoundsOnRestart = function()
   roundsPlayed = 0
 end
 
+--generates 5 new jokers, called after previous jokers are destroyed
 rollJoker = function()
   roundsPlayed = roundsPlayed + 1
   if roundsPlayed > 1 then
@@ -21,6 +26,7 @@ rollJoker = function()
   end
 end
 
+--called upon blind select, destroys all jokers in hand and calls rollJoker() (seen above)
 rerollJokers = function()
   for _, joker in ipairs(G.jokers.cards) do
     joker:start_dissolve(nil, (k ~= 1))
@@ -28,6 +34,7 @@ rerollJokers = function()
   rollJoker()
 end
 
+--define mod settings
 local randomJokersMod = {
   mod_id = "randomJokersOnBlindSelect",
   name = "Random Jokers",
@@ -40,6 +47,7 @@ local randomJokersMod = {
   on_enable = function()
     sendDebugMessage("Random Jokers enabled!")
 
+    --patch Blind:set_blind, in blind.lua to call rerollJokers(), blindsToReroll ensures jokers are only rolled upon blind select
     local patch = [[
       if not reset then
         blindsToReroll = {
@@ -82,13 +90,17 @@ local randomJokersMod = {
         end
       end
     ]]
+    --inject patch to Blind:set_blind in blind.lua
     injectTail("blind.lua", "Blind:set_blind", patch)
-
+    
+    --patch Game:start_run in game.lua to reset rounds played upon restart
     local patch = [[
       resetRoundsOnRestart()
     ]]
+    -- inject the patch
     injectTail('game.lua', "Game:start_run", patch)
   end,
+
   on_post_update = function()
     if not patched then
       init_localization()
@@ -96,4 +108,8 @@ local randomJokersMod = {
     end
   end
 }
+
+--insert the mod into the mods table
 table.insert(mods, randomJokersMod)
+
+--end of mod
