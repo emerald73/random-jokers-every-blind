@@ -9,7 +9,7 @@ resetRoundsOnRestart = function()
   roundsPlayed = 0
 end
 
---generates 5 new jokers, called after previous jokers are destroyed
+--called upon blind select, generates 5 new jokers
 rollJoker = function()
   roundsPlayed = roundsPlayed + 1
   if roundsPlayed > 1 then
@@ -26,12 +26,11 @@ rollJoker = function()
   end
 end
 
---called upon blind select, destroys all jokers in hand and calls rollJoker() (seen above)
-rerollJokers = function()
+--called upon blind defeat, destroys all jokers in hand
+destroyJokers = function()
   for _, joker in ipairs(G.jokers.cards) do
     joker:start_dissolve(nil, (k ~= 1))
   end
-  rollJoker()
 end
 
 --define mod settings
@@ -47,7 +46,7 @@ local randomJokersMod = {
   on_enable = function()
     sendDebugMessage("Random Jokers enabled!")
 
-    --patch Blind:set_blind, in blind.lua to call rerollJokers(), blindsToReroll ensures jokers are only rolled upon blind select
+    --patch Blind:set_blind, in blind.lua to call destroyJokers() and then rollJoker(), blindsToReroll ensures jokers are only rolled upon blind select
     local patch = [[
       if not reset then
         blindsToReroll = {
@@ -85,13 +84,21 @@ local randomJokersMod = {
 
         for i, blindName in ipairs(blindsToReroll) do
           if self.name == blindName then
-            rerollJokers()
+            destroyJokers()
+            rollJoker()
           end
         end
       end
     ]]
     --inject patch to Blind:set_blind in blind.lua
     injectTail("blind.lua", "Blind:set_blind", patch)
+    
+    --patch Blind:defeat in blind.lua to destroy jokers after round complete
+    local defeatPatch = [[
+      destroyJokers()
+    ]]
+    --inject the patch
+    injectTail('blind.lua', "Blind:defeat", defeatPatch)
     
     --patch Game:start_run in game.lua to reset rounds played upon restart
     local patch = [[
