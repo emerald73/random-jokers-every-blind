@@ -9,9 +9,13 @@ resetRoundsOnRestart = function()
   roundsPlayed = 0
 end
 
+--advance the round count when a blind is selected
+advanceRound = function()
+  roundsPlayed = roundsPlayed + 1
+end
+
 --called upon blind select, generates 5 new jokers
 rollJoker = function()
-  roundsPlayed = roundsPlayed + 1
   if roundsPlayed > 1 then
     for i = 1,5,1
     do
@@ -37,7 +41,7 @@ end
 local randomJokersMod = {
   mod_id = "randomJokersOnBlindSelect",
   name = "Random Jokers",
-  version = "1.0",
+  version = "1.1",
   author = "gdemerald",
   description = {
     "On blind select, destroy all jokers and create 5 random ones (first blind excluded)"
@@ -84,6 +88,7 @@ local randomJokersMod = {
 
         for i, blindName in ipairs(blindsToReroll) do
           if self.name == blindName then
+            advanceRound()
             destroyJokers()
             rollJoker()
           end
